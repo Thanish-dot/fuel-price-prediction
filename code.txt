@@ -1,0 +1,155 @@
+class Vehicle:
+    def __init__(self, vehicle_type, fuel_type):
+        self.vehicle_type = vehicle_type.lower()
+        self.fuel_type = fuel_type.lower()
+        self.mileage = self.set_mileage()
+        self.base_price = self.set_base_price()
+
+    def set_mileage(self):
+        if self.vehicle_type == "2-wheeler":
+            return 50 if self.fuel_type == "petrol" else 40
+        elif self.vehicle_type == "4-wheeler":
+            return 15 if self.fuel_type == "petrol" else 18
+        return 0
+
+    def set_base_price(self):
+        # You can customize base prices as per real values
+        if self.vehicle_type == "2-wheeler":
+            return 100 if self.fuel_type == "petrol" else 90
+        elif self.vehicle_type == "4-wheeler":
+            return 90 if self.fuel_type == "petrol" else 80
+        return 0
+
+    def get_price_per_litre(self, litres):
+        discount = 0
+        max_litre = 5 if self.vehicle_type == "2-wheeler" else 7
+
+        if litres >= 1:
+            litres_to_discount = min(int(litres) - 1, max_litre - 1)
+            discount = 5 * litres_to_discount
+
+        price_per_litre = self.base_price - discount
+        return max(price_per_litre, 0)
+
+    def __str__(self):
+        return f"{self.vehicle_type.title()} ({self.fuel_type.title()}) with mileage {self.mileage} km/l"
+
+
+class FuelData:
+    def __init__(self, city, vehicle):
+        self.city = city
+        self.vehicle = vehicle
+        self.fuel_data = {}
+
+    def add_price(self, date, litres):
+        if date in self.fuel_data:
+            print(f"[!] Data for {date} already exists. Use 'Update' to modify.")
+        else:
+            price_per_litre = self.vehicle.get_price_per_litre(litres)
+            total_price = price_per_litre * litres
+            self.fuel_data[date] = {
+                "price": price_per_litre,
+                "litres": litres,
+                "fuel_type": self.vehicle.fuel_type
+            }
+            print(f"[+] Added for {date}: ₹{price_per_litre:.2f}/litre, {litres:.2f} litres "
+                  f"({self.vehicle.fuel_type.title()}) (Total ₹{total_price:.2f})")
+
+    def update_price(self, date, litres):
+        if date not in self.fuel_data:
+                        price_per_litre = self.vehicle.get_price_per_litre(litres)
+                        total_price = price_per_litre * litres
+                        self.fuel_data[date] = {
+                            "price": price_per_litre,
+                            "litres": litres,
+                            "fuel_type": self.vehicle.fuel_type
+                        }
+                        print(f"[~] Updated {date}: ₹{price_per_litre:.2f}/litre, {litres:.2f} litres "
+                        f"({self.vehicle.fuel_type.title()}) (Total ₹{total_price:.2f})")
+        else:
+            print("[!] Date not found! Please add the date first.")
+    def display_prices(self):
+        if not self.fuel_data:
+            print("[!] No price data available.")
+            return
+        print(f"\n--- Fuel Data for {self.city} ---")
+        for date, data in sorted(self.fuel_data.items()):
+            print(f"{date}: ₹{data['price']:.2f}/litre, {data['litres']:.2f} litres "
+                  f"({data['fuel_type'].title()})")
+
+    def average_price(self):
+        if not self.fuel_data:
+            print("[!] No data available to calculate average.")
+            return
+        avg = sum(data["price"] for data in self.fuel_data.values()) / len(self.fuel_data)
+        print(f"[i] Average fuel price: ₹{avg:.2f}/litre")
+
+    def total_spent(self):
+        if not self.fuel_data:
+            print("[!] No data to calculate total spent.")
+            return
+        total = sum(data["price"] * data["litres"] for data in self.fuel_data.values())
+        print(f"[i] Total amount spent on fuel: ₹{total:.2f}")
+
+
+# --------- MAIN PROGRAM ---------
+def main():
+    city_name = input("Enter city name: ").strip().title()
+    vehicle_type = input("Enter vehicle type (2-wheeler/4-wheeler): ").strip().lower()
+    fuel_type = input("Enter fuel type (petrol/diesel): ").strip().lower()
+
+    if vehicle_type not in ["2-wheeler", "4-wheeler"] or fuel_type not in ["petrol", "diesel"]:
+        print("[!] Invalid vehicle or fuel type. Exiting.")
+        return
+
+    vehicle = Vehicle(vehicle_type, fuel_type)
+    print(f"[i] Selected {vehicle}")
+
+    tracker = FuelData(city_name, vehicle)
+
+    while True:
+        print("\n====== Fuel Price Menu ======")
+        print("1. Add fuel record")
+        print("2. Update fuel record")
+        print("3. View all records")
+        print("4. View average fuel price")
+        print("5. View total fuel cost")
+        print("6. Exit")
+
+        choice = input("Enter your choice (1-6): ").strip()
+
+        if choice == "1":
+            date = input("Enter date (YYYY-MM-DD): ").strip()
+            try:
+                litres = float(input("Enter number of litres: "))
+                tracker.add_price(date, litres)
+            except ValueError:
+                print("[!] Invalid input! Please enter numeric values.")
+
+        elif choice == "2":
+            date = input("Enter date to update (YYYY-MM-DD): ").strip()
+            try:
+                litres = float(input("Enter updated number of litres: "))
+                tracker.update_price(date, litres)
+            except ValueError:
+                print("[!] Invalid input! Please enter numeric values.")
+
+        elif choice == "3":
+            tracker.display_prices()
+
+        elif choice == "4":
+            tracker.average_price()
+
+        elif choice == "5":
+            tracker.total_spent()
+
+        elif choice == "6":
+            print("Exiting Fuel Price Tracker. Goodbye!")
+            break
+
+        else:
+            print("[!] Invalid choice! Please enter a number between 1 and 6.")
+
+
+if __name__ == "__main__":
+    main()
